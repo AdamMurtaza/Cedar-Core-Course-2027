@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Expense Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        h1, h2, h3 {
+            color: #333;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-section input[type="text"],
+        .input-section input[type="number"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .input-section button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .input-section button:hover {
+            background-color: #0056b3;
+        }
+
+        .expense-list ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .expense-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        .expense-list li:last-child {
+            border-bottom: none;
+        }
+
+        .total-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #007bff;
+        }
+
+        .total-section h3 {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Expense Tracker</h1>
+        <div class="input-section">
+            <input type="text" id="expenseName" placeholder="Expense Name">
+            <input type="number" id="expenseAmount" placeholder="Amount" step="0.01">
+            <button id="addExpenseBtn">Add Expense</button>
+        </div>
+        <div class="expense-list">
+            <h2>My Expenses</h2>
+            <ul id="expenses">
+                <!-- Expenses will be added here by JavaScript -->
+            </ul>
+        </div>
+        <div class="total-section">
+            <h3>Total Expenses: $<span id="totalExpenses">0.00</span></h3>
+        </div>
+    </div>
+
+    <script>
+        const expenseNameInput = document.getElementById('expenseName');
+        const expenseAmountInput = document.getElementById('expenseAmount');
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        const expensesList = document.getElementById('expenses');
+        const totalExpensesSpan = document.getElementById('totalExpenses');
+
+        let total = 0;
+
+        addExpenseBtn.addEventListener('click', () => {
+            const name = expenseNameInput.value.trim();
+            const amount = parseFloat(expenseAmountInput.value);
+
+            if (name && !isNaN(amount) && amount > 0) {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${name}: $${amount.toFixed(2)}`;
+                expensesList.appendChild(listItem);
+
+                total += amount;
+                totalExpensesSpan.textContent = total.toFixed(2);
+
+                expenseNameInput.value = '';
+                expenseAmountInput.value = '';
+            } else {
+                alert('Please enter a valid expense name and amount.');
+            }
+        });
+    </script>
+</body>
+</html>
