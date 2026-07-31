@@ -1,3 +1,15 @@
+# @title 💰 Simple Budget Tracker {display-mode: "form"}
+import json
+from IPython.display import HTML, display
+from google.colab import output
+
+# Enable JavaScript error logging in Colab
+def log_javascript_error(error_message):
+    print(f"JavaScript Error: {error_message}")
+
+output.register_callback('report_js_error', log_javascript_error)
+
+dashboard_html = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,6 +28,12 @@
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
         .stats {
             display: flex;
             justify-content: space-around;
@@ -31,6 +49,13 @@
         }
         input, select, button {
             padding: 10px;
+        }
+        .btn-reset {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
         table {
             width: 100%;
@@ -50,7 +75,10 @@
 </head>
 <body>
     <div class='container'>
-        <h1>Budget Tracker</h1>
+        <div class='header'>
+            <h1>Budget Tracker</h1>
+            <button class='btn-reset' onclick='resetData()'>Reset All Data</button>
+        </div>
 
         <div class='stats'>
             <div>Income: <b id='stat-income'>$0</b></div>
@@ -106,6 +134,13 @@
             }
         }
 
+        function resetData() {
+            if (confirm('Are you sure you want to delete all transactions?')) {
+                data = [];
+                updateDashboard();
+            }
+        }
+
         function updateDashboard() {
             localStorage.setItem('simple_budget', JSON.stringify(data));
 
@@ -136,7 +171,10 @@
                 type: 'pie',
                 data: {
                     labels: Object.keys(catTotals),
-                    datasets: [{ data: Object.values(catTotals) }]
+                    datasets: [{
+                        data: Object.values(catTotals),
+                        backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f']
+                    }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
@@ -147,3 +185,5 @@
 </body>
 </html>
 """
+
+display(HTML(dashboard_html))
