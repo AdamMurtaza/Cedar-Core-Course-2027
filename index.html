@@ -1,15 +1,3 @@
-# @title 💰 Simple Budget Tracker {display-mode: "form"}
-import json
-from IPython.display import HTML, display
-from google.colab import output
-
-# Enable JavaScript error logging in Colab
-def log_javascript_error(error_message):
-    print(f"JavaScript Error: {error_message}")
-
-output.register_callback('report_js_error', log_javascript_error)
-
-dashboard_html = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -185,5 +173,3 @@ dashboard_html = """
 </body>
 </html>
 """
-
-display(HTML(dashboard_html))
