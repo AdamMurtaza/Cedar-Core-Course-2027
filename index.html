@@ -1,206 +1,149 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html>
 <head>
-    <meta charset='UTF-8'>
     <script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
     <style>
-        :root {
-            --bg: #f4f6f8; --card: #ffffff; --text: #2c3e50; --primary: #3498db; --success: #27ae60; --danger: #e74c3c;
+        body {
+            font-family: sans-serif;
+            background-color: #f4f6f8;
+            padding: 20px;
         }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .dashboard { max-width: 1200px; margin: auto; display: flex; flex-direction: column; gap: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-
-        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .kpi-card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; }
-        .kpi-card h3 { margin: 0; font-size: 0.9rem; color: #7f8c8d; text-transform: uppercase; }
-        .kpi-card .value { font-size: 1.8rem; font-weight: bold; margin: 10px 0; }
-
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .canvas-wrapper { position: relative; flex-grow: 1; min-height: 250px; }
-
-        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        input, select, button { padding: 10px; border-radius: 6px; border: 1px solid #ddd; font-size: 1rem; }
-        button { background: var(--primary); color: white; border: none; cursor: pointer; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-
-        .list-container { max-height: 300px; overflow-y: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-
-        .joke-box { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; border-radius: 8px; font-style: italic; margin-top: 10px; }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #eee;
+            border-radius: 8px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, select, button {
+            padding: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .canvas-wrapper {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class='dashboard'>
-        <div class='header'>
-            <h1>💰 Budget Pro Dashboard</h1>
-            <button onclick='clearAllData()' style='background:var(--danger)'>Reset All</button>
+    <div class='container'>
+        <h1>Budget Tracker</h1>
+
+        <div class='stats'>
+            <div>Income: <b id='stat-income'>$0</b></div>
+            <div>Expenses: <b id='stat-expenses'>$0</b></div>
+            <div>Balance: <b id='stat-balance'>$0</b></div>
         </div>
 
-        <div class='kpi-row'>
-            <div class='kpi-card'><h3>Monthly Income</h3><div class='value' id='kpi-income'>$0.00</div></div>
-            <div class='kpi-card'><h3>Actual Spending</h3><div class='value' id='kpi-spent'>$0.00</div></div>
-            <div class='kpi-card'><h3>Net Savings</h3><div class='value' id='kpi-savings'>$0.00</div></div>
-            <div class='kpi-card'><h3>Burn Rate</h3><div class='value' id='kpi-burn'>0%</div></div>
+        <div class='input-group'>
+            <select id='type'>
+                <option value='income'>Income</option>
+                <option value='expense'>Expense</option>
+            </select>
+            <input type='text' id='desc' placeholder='Description'>
+            <input type='number' id='amt' placeholder='Amount'>
+            <select id='cat'>
+                <option>Food</option>
+                <option>Rent</option>
+                <option>Fun</option>
+                <option>Other</option>
+            </select>
+            <button onclick='addTransaction()'>Add</button>
         </div>
 
-        <div class='main-grid'>
-            <div class='card'>
-                <h2>Add Transaction</h2>
-                <div class='controls'>
-                    <select id='type'>
-                        <option value='income'>Income</option>
-                        <option value='expense'>Expense</option>
-                    </select>
-                    <input type='text' id='desc' placeholder='Description (e.g. Salary, Pizza)'>
-                    <input type='number' id='amount' placeholder='Amount'>
-                    <select id='cat'>
-                        <option>Fixed</option><option>Food</option><option>Fun</option><option>Transport</option><option>Housing</option>
-                    </select>
-                    <button onclick='addEntry()'>Add Entry</button>
-                </div>
-                <div id='jokeDisplay' class='joke-box' style='display:none;'></div>
-                <div class='list-container'>
-                    <table id='entryTable'>
-                        <thead><tr><th>Date</th><th>Type</th><th>Desc</th><th>Category</th><th>Amount</th></tr></thead>
-                        <tbody id='entryList'></tbody>
-                    </table>
-                </div>
-            </div>
-            <div class='card'>
-                <h2>Spending Breakdown</h2>
-                <div class='canvas-wrapper'>
-                    <canvas id='pieChart'></canvas>
-                </div>
-            </div>
-        </div>
+        <table>
+            <thead>
+                <tr><th>Description</th><th>Category</th><th>Amount</th></tr>
+            </thead>
+            <tbody id='table-body'></tbody>
+        </table>
 
-        <div class='card'>
-            <h2>Monthly Trend</h2>
-            <div class='canvas-wrapper'>
-                <canvas id='lineChart'></canvas>
-            </div>
+        <div class='canvas-wrapper'>
+            <canvas id='chart'></canvas>
         </div>
     </div>
 
     <script>
-        window.onerror = function(message) {
-            google.colab.kernel.invokeFunction('report_js_error', [message], {});
-        };
+        window.onerror = function(m) { google.colab.kernel.invokeFunction('report_js_error', [m], {}); };
 
-        let state = JSON.parse(localStorage.getItem('colab_budget_v2')) || { entries: [] };
-        let pieChart, lineChart;
+        let data = JSON.parse(localStorage.getItem('simple_budget')) || [];
+        let myChart = null;
 
-        const jokes = [
-            "My bank account is like an onion. When I open it, I cry.",
-            "I'm on a seafood diet. I see food, and I spend all my money on it.",
-            "Money talks, but mine just says 'Goodbye'.",
-            "I'm not poor, I'm just in an 'extended financial discovery phase'."
-        ];
-
-        function addEntry() {
+        function addTransaction() {
             const type = document.getElementById('type').value;
             const desc = document.getElementById('desc').value;
-            const amount = parseFloat(document.getElementById('amount').value);
+            const amt = parseFloat(document.getElementById('amt').value);
             const cat = document.getElementById('cat').value;
 
-            if (!desc || isNaN(amount)) return;
-
-            const entry = {
-                id: Date.now(),
-                date: new Date().toLocaleDateString(),
-                type, desc, amount, cat
-            };
-
-            state.entries.unshift(entry);
-            saveAndRefresh();
-
-            if (type === 'expense') {
-                const jb = document.getElementById('jokeDisplay');
-                jb.style.display = 'block';
-                jb.innerText = "💬 " + jokes[Math.floor(Math.random() * jokes.length)];
-            }
-
-            document.getElementById('desc').value = '';
-            document.getElementById('amount').value = '';
-        }
-
-        function clearAllData() {
-            if(confirm('Clear all entries?')) {
-                state = { entries: [] };
-                saveAndRefresh();
+            if (desc && !isNaN(amt)) {
+                data.push({ type, desc, amt, cat });
+                updateDashboard();
+                document.getElementById('desc').value = '';
+                document.getElementById('amt').value = '';
             }
         }
 
-        function saveAndRefresh() {
-            localStorage.setItem('colab_budget_v2', JSON.stringify(state));
-            updateUI();
-        }
+        function updateDashboard() {
+            localStorage.setItem('simple_budget', JSON.stringify(data));
 
-        function updateUI() {
-            const list = document.getElementById('entryList');
-            list.innerHTML = '';
+            const body = document.getElementById('table-body');
+            body.innerHTML = '';
 
             let inc = 0, exp = 0;
-            const catTotals = {};
+            let catTotals = {};
 
-            state.entries.forEach(e => {
-                const row = list.insertRow();
-                row.innerHTML = `<td>${e.date}</td><td>${e.type}</td><td>${e.desc}</td><td>${e.cat}</td><td>$${e.amount.toFixed(2)}</td>`;
+            data.forEach(item => {
+                const row = body.insertRow();
+                row.innerHTML = `<td>${item.desc}</td><td>${item.cat}</td><td>$${item.amt}</td>`;
 
-                if (e.type === 'income') inc += e.amount;
-                else {
-                    exp += e.amount;
-                    catTotals[e.cat] = (catTotals[e.cat] || 0) + e.amount;
+                if (item.type === 'income') {
+                    inc += item.amt;
+                } else {
+                    exp += item.amt;
+                    catTotals[item.cat] = (catTotals[item.cat] || 0) + item.amt;
                 }
             });
 
-            document.getElementById('kpi-income').innerText = '$' + inc.toFixed(2);
-            document.getElementById('kpi-spent').innerText = '$' + exp.toFixed(2);
-            document.getElementById('kpi-savings').innerText = '$' + (inc - exp).toFixed(2);
-            document.getElementById('kpi-burn').innerText = inc > 0 ? ((exp / inc) * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('stat-income').innerText = '$' + inc;
+            document.getElementById('stat-expenses').innerText = '$' + exp;
+            document.getElementById('stat-balance').innerText = '$' + (inc - exp);
 
-            updateCharts(catTotals);
-        }
-
-        function updateCharts(catTotals) {
-            if (pieChart) pieChart.destroy();
-            if (lineChart) lineChart.destroy();
-
-            const ctxPie = document.getElementById('pieChart').getContext('2d');
-            pieChart = new Chart(ctxPie, {
-                type: 'doughnut',
+            if (myChart) myChart.destroy();
+            myChart = new Chart(document.getElementById('chart'), {
+                type: 'pie',
                 data: {
                     labels: Object.keys(catTotals),
-                    datasets: [{
-                        data: Object.values(catTotals),
-                        backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            // Simple trend line
-            const ctxLine = document.getElementById('lineChart').getContext('2d');
-            const trendData = [...state.entries].reverse();
-            lineChart = new Chart(ctxLine, {
-                type: 'line',
-                data: {
-                    labels: trendData.map(e => e.date),
-                    datasets: [{
-                        label: 'Transaction Amount',
-                        data: trendData.map(e => e.type === 'income' ? e.amount : -e.amount),
-                        borderColor: '#3498db',
-                        fill: false
-                    }]
+                    datasets: [{ data: Object.values(catTotals) }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
 
-        updateUI();
+        updateDashboard();
     </script>
 </body>
 </html>
+"""
