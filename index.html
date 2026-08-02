@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Insights Dashboard</title>
+    <title>Knight's Budget Planner</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
@@ -224,7 +224,7 @@
     <div class="dashboard-container">
         <div class="header">
             <div>
-                <h1 style="margin: 0; color: #0284c7;">💎 Financial Insights</h1>
+                <h1 style="margin: 0; color: #0284c7;">⚔️ Knight's Budget Planner</h1>
                 <p style="color: var(--text-muted); margin: 5px 0 0 0;">Track, analyze, and optimize your wealth</p>
             </div>
             <div class="actions">
@@ -323,7 +323,7 @@
         chart_instance = None
 
         # Load existing data from browser LocalStorage on page load
-        saved_data = window.localStorage.getItem('premium_budget_data')
+        saved_data = window.localStorage.getItem('knights_budget_data')
         if saved_data:
             transactions = json.loads(saved_data)
 
@@ -335,7 +335,7 @@
             global chart_instance
 
             # Save data to LocalStorage
-            window.localStorage.setItem('premium_budget_data', json.dumps(transactions))
+            window.localStorage.setItem('knights_budget_data', json.dumps(transactions))
 
             # Clear current table rows
             table_body = document.getElementById('table-body')
@@ -403,7 +403,6 @@
 
             dataset = window.Object.new()
             dataset.data = list(category_totals.values())
-            # Blue color scheme palette for chart segments
             dataset.backgroundColor = ['#0284c7', '#38bdf8', '#7dd3fc', '#bae6fd', '#0284c7', '#0369a1']
 
             chart_data = window.Object.new()
@@ -459,7 +458,7 @@
             
             download_link = document.createElement('a')
             download_link.href = window.URL.createObjectURL(blob)
-            download_link.download = "budget_export.csv"
+            download_link.download = "knights_budget_export.csv"
             download_link.click()
 
 
