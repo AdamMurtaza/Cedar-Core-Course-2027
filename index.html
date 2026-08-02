@@ -1,111 +1,291 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Tracker</title>
-    
+    <title>Financial Insights Dashboard</title>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
 
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --bg: #f8f9fa;
+        }
+
         body {
-            font-family: sans-serif;
-            background-color: #f4f6f8;
-            padding: 20px;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 25px;
+            color: #2b2d42;
         }
-        .container {
-            max-width: 900px;
+
+        .dashboard-container {
+            max-width: 1200px;
             margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            margin: 0;
+            color: #8d99ae;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card .value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 10px 0;
+        }
+
+        .progress-container {
+            height: 8px;
+            background: #edf2f4;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 25px;
+        }
+
+        .section-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-height: 350px;
+        }
+
+        .input-bar {
+            background: white;
             padding: 20px;
-            background: #eee;
-            border-radius: 8px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            align-items: end;
         }
-        .input-group {
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .actions {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
         }
-        input, select, button {
-            padding: 10px;
-        }
-        .btn-reset {
-            background-color: #e74c3c;
-            color: white;
+
+        .btn {
             border: none;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
         }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .insight-box {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid var(--primary);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 15px;
         }
-        th, td {
-            border-bottom: 1px solid #ddd;
-            padding: 10px;
+
+        th {
             text-align: left;
+            font-size: 0.8rem;
+            color: #8d99ae;
+            padding: 10px;
+            border-bottom: 2px solid #f8f9fa;
         }
-        .canvas-wrapper {
-            position: relative;
-            height: 300px;
-            margin-top: 20px;
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f8f9fa;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <div class="dashboard-container">
         <div class="header">
-            <h1>Budget Tracker</h1>
-            <button class="btn-reset" id="btn-reset">Reset All Data</button>
+            <div>
+                <h1 style="margin: 0;">💎 Financial Insights</h1>
+                <p style="color: #8d99ae; margin: 5px 0 0 0;">Track, analyze, and optimize your wealth</p>
+            </div>
+            <div class="actions">
+                <button class="btn btn-outline" id="btn-export">Export CSV</button>
+                <button class="btn btn-danger" id="btn-reset">Reset</button>
+            </div>
         </div>
 
-        <div class="stats">
-            <div>Income: <b id="stat-income">$0</b></div>
-            <div>Expenses: <b id="stat-expenses">$0</b></div>
-            <div>Balance: <b id="stat-balance">$0</b></div>
+        <div class="kpi-row">
+            <div class="card">
+                <h3>Total Income</h3>
+                <div class="value" id="stat-income">$0.00</div>
+            </div>
+            <div class="card">
+                <h3>Expenses</h3>
+                <div class="value" id="stat-expenses" style="color: var(--danger);">$0.00</div>
+            </div>
+            <div class="card">
+                <h3>Burn Rate</h3>
+                <div class="value" id="stat-burn">0%</div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="burn-progress"></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Net Savings</h3>
+                <div class="value" id="stat-balance" style="color: var(--primary);">$0.00</div>
+            </div>
         </div>
 
-        <div class="input-group">
-            <select id="type">
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-            </select>
-            <input type="text" id="desc" placeholder="Description">
-            <input type="number" id="amt" placeholder="Amount">
-            <select id="cat">
-                <option>Food</option>
-                <option>Rent</option>
-                <option>Fun</option>
-                <option>Other</option>
-            </select>
-            <button id="btn-add">Add</button>
+        <div class="input-bar">
+            <div class="form-group">
+                <label>Type</label>
+                <select id="type">
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="desc" placeholder="Rent, Salary...">
+            </div>
+            <div class="form-group">
+                <label>Amount ($)</label>
+                <input type="number" id="amt" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="cat">
+                    <option>Housing</option>
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Utilities</option>
+                    <option>Leisure</option>
+                    <option>Investing</option>
+                    <option>Salary</option>
+                </select>
+            </div>
+            <button id="btn-add" class="btn btn-primary">Add Record</button>
         </div>
 
-        <table>
-            <thead>
-                <tr><th>Description</th><th>Category</th><th>Amount</th></tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
-
-        <div class="canvas-wrapper">
-            <canvas id="chart"></canvas>
+        <div class="main-grid">
+            <div class="section-card">
+                <h3 style="margin-top: 0;">Expense Distribution</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+            <div class="section-card">
+                <h3 style="margin-top: 0;">Recent Activity</h3>
+                <div style="overflow-y: auto; max-height: 250px;">
+                    <table id="trans-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+                <div class="insight-box" id="insight-text">
+                    Start adding records to see spending insights.
+                </div>
+            </div>
         </div>
     </div>
 
@@ -114,113 +294,174 @@
         from pyscript import document, window
         from pyodide.ffi import create_proxy
 
-        data = []
-        my_chart = None
+        # Global storage variables
+        transactions = []
+        chart_instance = None
 
-        # Load data from LocalStorage
-        saved_data = window.localStorage.getItem('simple_budget')
+        # Load existing data from browser LocalStorage on page load
+        saved_data = window.localStorage.getItem('premium_budget_data')
         if saved_data:
-            data = json.loads(saved_data)
+            transactions = json.loads(saved_data)
 
         def update_dashboard():
-            global my_chart
-            # Save to localStorage
-            window.localStorage.setItem('simple_budget', json.dumps(data))
+            """
+            Recalculates metrics, updates HTML elements, 
+            renders the summary table, and updates the pie chart.
+            """
+            global chart_instance
 
-            # Clear existing table rows
-            body = document.getElementById('table-body')
-            body.innerHTML = ''
+            # Save data to LocalStorage
+            window.localStorage.setItem('premium_budget_data', json.dumps(transactions))
 
-            inc = 0.0
-            exp = 0.0
-            cat_totals = {}
+            # Clear the current table rows
+            table_body = document.getElementById('table-body')
+            table_body.innerHTML = ''
 
-            # Populate table rows and aggregate stats
-            for item in data:
-                row = body.insertRow()
-                
-                cell_desc = row.insertCell(0)
-                cell_cat = row.insertCell(1)
-                cell_amt = row.insertCell(2)
+            total_income = 0.0
+            total_expenses = 0.0
+            category_totals = {}
 
-                cell_desc.innerText = item['desc']
-                cell_cat.innerText = item['cat']
-                cell_amt.innerText = f"${item['amt']}"
+            # Process all recorded transactions
+            for item in transactions:
+                # Add row to recent activity table
+                new_row = table_body.insertRow(0)
+                category_cell = new_row.insertCell(0)
+                amount_cell = new_row.insertCell(1)
 
-                amt = float(item['amt'])
+                category_cell.innerText = item['cat']
+                amount_cell.innerText = f"${item['amt']:,.2f}"
+
+                # Calculate totals based on transaction type
+                amount = float(item['amt'])
                 if item['type'] == 'income':
-                    inc += amt
+                    total_income = total_income + amount
                 else:
-                    exp += amt
-                    cat_totals[item['cat']] = cat_totals.get(item['cat'], 0.0) + amt
+                    total_expenses = total_expenses + amount
+                    if item['cat'] in category_totals:
+                        category_totals[item['cat']] = category_totals[item['cat']] + amount
+                    else:
+                        category_totals[item['cat']] = amount
 
-            # Update HTML statistics labels
-            document.getElementById('stat-income').innerText = f"${inc}"
-            document.getElementById('stat-expenses').innerText = f"${exp}"
-            document.getElementById('stat-balance').innerText = f"${inc - exp}"
+            # Calculate burn rate percentage
+            if total_income > 0:
+                burn_rate = (total_expenses / total_income) * 100
+            else:
+                burn_rate = 0.0
 
-            # Destroy prior Chart.js instance before re-rendering
-            if my_chart is not None:
-                my_chart.destroy()
+            # Update KPI card values on screen
+            net_savings = total_income - total_expenses
+            document.getElementById('stat-income').innerText = f"${total_income:,.2f}"
+            document.getElementById('stat-expenses').innerText = f"${total_expenses:,.2f}"
+            document.getElementById('stat-balance').innerText = f"${net_savings:,.2f}"
+            document.getElementById('stat-burn').innerText = f"{burn_rate:.0f}%"
 
-            labels = list(cat_totals.keys())
-            values = list(cat_totals.values())
+            # Set progress bar width capped at 100%
+            progress_width = min(burn_rate, 100)
+            document.getElementById('burn-progress').style.width = f"{progress_width}%"
 
-            # Configure Chart.js options using Pyodide JS objects
-            chart_config = window.Object.new()
-            chart_config.type = 'pie'
+            # Generate insightful messaging
+            if burn_rate > 80:
+                insight_message = "⚠️ Warning: High burn rate. Review your leisure spending."
+            elif len(category_totals) > 0:
+                highest_category = max(category_totals, key=category_totals.get)
+                insight_message = f"💡 Fact: Your biggest expense is <b>{highest_category}</b>."
+            else:
+                insight_message = "Everything looks balanced."
             
-            data_obj = window.Object.new()
-            data_obj.labels = labels
+            document.getElementById('insight-text').innerHTML = insight_message
+
+            # Re-draw the Chart.js doughnut chart
+            if chart_instance is not None:
+                chart_instance.destroy()
+
+            chart_canvas = document.getElementById('chart')
+            
+            # Construct Chart.js configuration using Pyodide JS Interop
+            chart_config = window.Object.new()
+            chart_config.type = 'doughnut'
 
             dataset = window.Object.new()
-            dataset.data = values
-            dataset.backgroundColor = ['#3498db', '#e74c3c', '#27ae60', '#f1c40f']
+            dataset.data = list(category_totals.values())
+            dataset.backgroundColor = ['#4361ee', '#4cc9f0', '#f72585', '#7209b7', '#3a0ca3', '#4895ef']
 
-            data_obj.datasets = [dataset]
-            chart_config.data = data_obj
+            chart_data = window.Object.new()
+            chart_data.labels = list(category_totals.keys())
+            chart_data.datasets = [dataset]
 
-            options = window.Object.new()
-            options.responsive = True
-            options.maintainAspectRatio = False
-            chart_config.options = options
+            chart_options = window.Object.new()
+            chart_options.responsive = True
+            chart_options.maintainAspectRatio = False
 
-            # Render Chart.js
-            ctx = document.getElementById('chart')
-            my_chart = window.Chart.new(ctx, chart_config)
+            chart_config.data = chart_data
+            chart_config.options = chart_options
 
-        def add_transaction(event):
-            type_val = document.getElementById('type').value
-            desc_val = document.getElementById('desc').value.strip()
-            amt_raw = document.getElementById('amt').value
-            cat_val = document.getElementById('cat').value
+            chart_instance = window.Chart.new(chart_canvas, chart_config)
 
-            if desc_val and amt_raw != '':
+
+        def add_transaction_handler(event):
+            """Handler function to add a new transaction entry."""
+            description_input = document.getElementById('desc')
+            amount_input = document.getElementById('amt')
+            category_input = document.getElementById('cat')
+            type_input = document.getElementById('type')
+
+            description_value = description_input.value.strip()
+            amount_value = amount_input.value
+
+            if description_value != '' and amount_value != '':
                 try:
-                    amt_val = float(amt_raw)
-                    data.append({
-                        'type': type_val,
-                        'desc': desc_val,
-                        'amt': amt_val,
-                        'cat': cat_val
+                    parsed_amount = float(amount_value)
+                    transactions.append({
+                        'type': type_input.value,
+                        'desc': description_value,
+                        'amt': parsed_amount,
+                        'cat': category_input.value
                     })
+                    
                     update_dashboard()
-                    document.getElementById('desc').value = ''
-                    document.getElementById('amt').value = ''
+
+                    # Reset input fields after successful entry
+                    description_input.value = ''
+                    amount_input.value = ''
                 except ValueError:
                     pass
 
-        def reset_data(event):
-            global data
-            if window.confirm('Are you sure you want to delete all transactions?'):
-                data = []
+
+        def export_csv_handler(event):
+            """Generates and triggers a download of transactions in CSV format."""
+            csv_content = "Type,Description,Amount,Category\n"
+            for item in transactions:
+                csv_content = csv_content + f"{item['type']},{item['desc']},{item['amt']},{item['cat']}\n"
+
+            # Create blob and trigger file download
+            blob = window.Blob.new([csv_content], window.Object.new())
+            blob.type = "text/csv"
+            
+            download_link = document.createElement('a')
+            download_link.href = window.URL.createObjectURL(blob)
+            download_link.download = "budget_export.csv"
+            download_link.click()
+
+
+        def reset_all_handler(event):
+            """Clears all stored data after confirmation."""
+            global transactions
+            if window.confirm("Purge all financial data?"):
+                transactions = []
                 update_dashboard()
 
-        # Bind Python button click handlers safely
-        document.getElementById('btn-add').addEventListener('click', create_proxy(add_transaction))
-        document.getElementById('btn-reset').addEventListener('click', create_proxy(reset_data))
 
-        # Initial render on launch
+        # Create proxies for Python functions so HTML event listeners can call them
+        add_proxy = create_proxy(add_transaction_handler)
+        reset_proxy = create_proxy(reset_all_handler)
+        export_proxy = create_proxy(export_csv_handler)
+
+        # Attach event listeners to buttons
+        document.getElementById('btn-add').addEventListener('click', add_proxy)
+        document.getElementById('btn-reset').addEventListener('click', reset_proxy)
+        document.getElementById('btn-export').addEventListener('click', export_proxy)
+
+        # Render initial view on page load
         update_dashboard()
     </script>
 </body>
