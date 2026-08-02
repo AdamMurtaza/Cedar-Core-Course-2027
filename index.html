@@ -11,11 +11,15 @@
 
     <style>
         :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --bg: #f8f9fa;
+            --primary: #0284c7;       /* Soft ocean blue */
+            --secondary: #0369a1;     /* Deep navy accent */
+            --success: #06b6d4;       /* Bright light blue/cyan */
+            --danger: #ef4444;        /* Soft red for expenses */
+            --bg: #f0f7ff;            /* Light blue page background */
+            --card-bg: #ffffff;
+            --card-border: #e0f2fe;    /* Very soft blue border */
+            --text-main: #0f172a;
+            --text-muted: #64748b;
         }
 
         body {
@@ -23,7 +27,7 @@
             background-color: var(--bg);
             margin: 0;
             padding: 25px;
-            color: #2b2d42;
+            color: var(--text-main);
         }
 
         .dashboard-container {
@@ -46,10 +50,11 @@
         }
 
         .card {
-            background: white;
+            background: var(--card-bg);
             padding: 25px;
             border-radius: 16px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.05);
             transition: transform 0.2s;
         }
 
@@ -59,7 +64,7 @@
 
         .card h3 {
             margin: 0;
-            color: #8d99ae;
+            color: var(--text-muted);
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -73,7 +78,7 @@
 
         .progress-container {
             height: 8px;
-            background: #edf2f4;
+            background: #e0f2fe;
             border-radius: 4px;
             margin-top: 15px;
             overflow: hidden;
@@ -93,10 +98,11 @@
         }
 
         .section-card {
-            background: white;
+            background: var(--card-bg);
             padding: 25px;
             border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.03);
         }
 
         .canvas-wrapper {
@@ -106,14 +112,15 @@
         }
 
         .input-bar {
-            background: white;
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 16px;
             margin-bottom: 25px;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 6px rgba(2, 132, 199, 0.03);
             align-items: end;
         }
 
@@ -126,14 +133,22 @@
         label {
             font-size: 0.8rem;
             font-weight: 600;
-            color: #4a5568;
+            color: var(--text-muted);
         }
 
         input, select {
             padding: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #bae6fd;
+            background-color: #f8fafc;
             border-radius: 8px;
             font-size: 0.95rem;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
         }
 
         .actions {
@@ -155,10 +170,18 @@
             color: white;
         }
 
+        .btn-primary:hover {
+            background: var(--secondary);
+        }
+
         .btn-outline {
             background: transparent;
-            border: 1px solid #e2e8f0;
-            color: #4a5568;
+            border: 1px solid #bae6fd;
+            color: var(--secondary);
+        }
+
+        .btn-outline:hover {
+            background: #e0f2fe;
         }
 
         .btn-danger {
@@ -167,11 +190,12 @@
         }
 
         .insight-box {
-            background: #f0f7ff;
+            background: #e0f2fe;
             padding: 15px;
             border-radius: 12px;
             margin-top: 20px;
             border-left: 4px solid var(--primary);
+            color: #0369a1;
         }
 
         table {
@@ -183,14 +207,14 @@
         th {
             text-align: left;
             font-size: 0.8rem;
-            color: #8d99ae;
+            color: var(--text-muted);
             padding: 10px;
-            border-bottom: 2px solid #f8f9fa;
+            border-bottom: 2px solid #e0f2fe;
         }
 
         td {
             padding: 12px 10px;
-            border-bottom: 1px solid #f8f9fa;
+            border-bottom: 1px solid #f1f5f9;
             font-size: 0.9rem;
         }
     </style>
@@ -200,8 +224,8 @@
     <div class="dashboard-container">
         <div class="header">
             <div>
-                <h1 style="margin: 0;">💎 Financial Insights</h1>
-                <p style="color: #8d99ae; margin: 5px 0 0 0;">Track, analyze, and optimize your wealth</p>
+                <h1 style="margin: 0; color: #0284c7;">💎 Financial Insights</h1>
+                <p style="color: var(--text-muted); margin: 5px 0 0 0;">Track, analyze, and optimize your wealth</p>
             </div>
             <div class="actions">
                 <button class="btn btn-outline" id="btn-export">Export CSV</button>
@@ -313,7 +337,7 @@
             # Save data to LocalStorage
             window.localStorage.setItem('premium_budget_data', json.dumps(transactions))
 
-            # Clear the current table rows
+            # Clear current table rows
             table_body = document.getElementById('table-body')
             table_body.innerHTML = ''
 
@@ -323,7 +347,6 @@
 
             # Process all recorded transactions
             for item in transactions:
-                # Add row to recent activity table
                 new_row = table_body.insertRow(0)
                 category_cell = new_row.insertCell(0)
                 amount_cell = new_row.insertCell(1)
@@ -331,7 +354,6 @@
                 category_cell.innerText = item['cat']
                 amount_cell.innerText = f"${item['amt']:,.2f}"
 
-                # Calculate totals based on transaction type
                 amount = float(item['amt'])
                 if item['type'] == 'income':
                     total_income = total_income + amount
@@ -355,7 +377,7 @@
             document.getElementById('stat-balance').innerText = f"${net_savings:,.2f}"
             document.getElementById('stat-burn').innerText = f"{burn_rate:.0f}%"
 
-            # Set progress bar width capped at 100%
+            # Set progress bar width
             progress_width = min(burn_rate, 100)
             document.getElementById('burn-progress').style.width = f"{progress_width}%"
 
@@ -370,19 +392,19 @@
             
             document.getElementById('insight-text').innerHTML = insight_message
 
-            # Re-draw the Chart.js doughnut chart
+            # Re-draw the Chart.js doughnut chart using a light-blue color palette
             if chart_instance is not None:
                 chart_instance.destroy()
 
             chart_canvas = document.getElementById('chart')
             
-            # Construct Chart.js configuration using Pyodide JS Interop
             chart_config = window.Object.new()
             chart_config.type = 'doughnut'
 
             dataset = window.Object.new()
             dataset.data = list(category_totals.values())
-            dataset.backgroundColor = ['#4361ee', '#4cc9f0', '#f72585', '#7209b7', '#3a0ca3', '#4895ef']
+            # Blue color scheme palette for chart segments
+            dataset.backgroundColor = ['#0284c7', '#38bdf8', '#7dd3fc', '#bae6fd', '#0284c7', '#0369a1']
 
             chart_data = window.Object.new()
             chart_data.labels = list(category_totals.keys())
@@ -420,7 +442,6 @@
                     
                     update_dashboard()
 
-                    # Reset input fields after successful entry
                     description_input.value = ''
                     amount_input.value = ''
                 except ValueError:
@@ -433,7 +454,6 @@
             for item in transactions:
                 csv_content = csv_content + f"{item['type']},{item['desc']},{item['amt']},{item['cat']}\n"
 
-            # Create blob and trigger file download
             blob = window.Blob.new([csv_content], window.Object.new())
             blob.type = "text/csv"
             
@@ -451,7 +471,7 @@
                 update_dashboard()
 
 
-        # Create proxies for Python functions so HTML event listeners can call them
+        # Create proxies for Python functions
         add_proxy = create_proxy(add_transaction_handler)
         reset_proxy = create_proxy(reset_all_handler)
         export_proxy = create_proxy(export_csv_handler)
@@ -461,7 +481,7 @@
         document.getElementById('btn-reset').addEventListener('click', reset_proxy)
         document.getElementById('btn-export').addEventListener('click', export_proxy)
 
-        # Render initial view on page load
+        # Initial render on page load
         update_dashboard()
     </script>
 </body>
