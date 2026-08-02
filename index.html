@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Tracker</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
     <style>
         body {
             font-family: sans-serif;
@@ -62,114 +69,159 @@
     </style>
 </head>
 <body>
-    <div class='container'>
-        <div class='header'>
+    <div class="container">
+        <div class="header">
             <h1>Budget Tracker</h1>
-            <button class='btn-reset' onclick='resetData()'>Reset All Data</button>
+            <button class="btn-reset" id="btn-reset">Reset All Data</button>
         </div>
 
-        <div class='stats'>
-            <div>Income: <b id='stat-income'>$0</b></div>
-            <div>Expenses: <b id='stat-expenses'>$0</b></div>
-            <div>Balance: <b id='stat-balance'>$0</b></div>
+        <div class="stats">
+            <div>Income: <b id="stat-income">$0</b></div>
+            <div>Expenses: <b id="stat-expenses">$0</b></div>
+            <div>Balance: <b id="stat-balance">$0</b></div>
         </div>
 
-        <div class='input-group'>
-            <select id='type'>
-                <option value='income'>Income</option>
-                <option value='expense'>Expense</option>
+        <div class="input-group">
+            <select id="type">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
             </select>
-            <input type='text' id='desc' placeholder='Description'>
-            <input type='number' id='amt' placeholder='Amount'>
-            <select id='cat'>
+            <input type="text" id="desc" placeholder="Description">
+            <input type="number" id="amt" placeholder="Amount">
+            <select id="cat">
                 <option>Food</option>
                 <option>Rent</option>
                 <option>Fun</option>
                 <option>Other</option>
             </select>
-            <button onclick='addTransaction()'>Add</button>
+            <button id="btn-add">Add</button>
         </div>
 
         <table>
             <thead>
                 <tr><th>Description</th><th>Category</th><th>Amount</th></tr>
             </thead>
-            <tbody id='table-body'></tbody>
+            <tbody id="table-body"></tbody>
         </table>
 
-        <div class='canvas-wrapper'>
-            <canvas id='chart'></canvas>
+        <div class="canvas-wrapper">
+            <canvas id="chart"></canvas>
         </div>
     </div>
 
-    <script>
-        window.onerror = function(m) { google.colab.kernel.invokeFunction('report_js_error', [m], {}); };
+    <script type="py">
+        import json
+        from pyscript import document, window
+        from pyodide.ffi import create_proxy
 
-        let data = JSON.parse(localStorage.getItem('simple_budget')) || [];
-        let myChart = null;
+        data = []
+        my_chart = None
 
-        function addTransaction() {
-            const type = document.getElementById('type').value;
-            const desc = document.getElementById('desc').value;
-            const amt = parseFloat(document.getElementById('amt').value);
-            const cat = document.getElementById('cat').value;
+        # Load data from LocalStorage
+        saved_data = window.localStorage.getItem('simple_budget')
+        if saved_data:
+            data = json.loads(saved_data)
 
-            if (desc && !isNaN(amt)) {
-                data.push({ type, desc, amt, cat });
-                updateDashboard();
-                document.getElementById('desc').value = '';
-                document.getElementById('amt').value = '';
-            }
-        }
+        def update_dashboard():
+            global my_chart
+            # Save to localStorage
+            window.localStorage.setItem('simple_budget', json.dumps(data))
 
-        function resetData() {
-            if (confirm('Are you sure you want to delete all transactions?')) {
-                data = [];
-                updateDashboard();
-            }
-        }
+            # Clear existing table rows
+            body = document.getElementById('table-body')
+            body.innerHTML = ''
 
-        function updateDashboard() {
-            localStorage.setItem('simple_budget', JSON.stringify(data));
+            inc = 0.0
+            exp = 0.0
+            cat_totals = {}
 
-            const body = document.getElementById('table-body');
-            body.innerHTML = '';
+            # Populate table rows and aggregate stats
+            for item in data:
+                row = body.insertRow()
+                
+                cell_desc = row.insertCell(0)
+                cell_cat = row.insertCell(1)
+                cell_amt = row.insertCell(2)
 
-            let inc = 0, exp = 0;
-            let catTotals = {};
+                cell_desc.innerText = item['desc']
+                cell_cat.innerText = item['cat']
+                cell_amt.innerText = f"${item['amt']}"
 
-            data.forEach(item => {
-                const row = body.insertRow();
-                row.innerHTML = `<td>${item.desc}</td><td>${item.cat}</td><td>$${item.amt}</td>`;
+                amt = float(item['amt'])
+                if item['type'] == 'income':
+                    inc += amt
+                else:
+                    exp += amt
+                    cat_totals[item['cat']] = cat_totals.get(item['cat'], 0.0) + amt
 
-                if (item.type === 'income') {
-                    inc += item.amt;
-                } else {
-                    exp += item.amt;
-                    catTotals[item.cat] = (catTotals[item.cat] || 0) + item.amt;
-                }
-            });
+            # Update HTML statistics labels
+            document.getElementById('stat-income').innerText = f"${inc}"
+            document.getElementById('stat-expenses').innerText = f"${exp}"
+            document.getElementById('stat-balance').innerText = f"${inc - exp}"
 
-            document.getElementById('stat-income').innerText = '$' + inc;
-            document.getElementById('stat-expenses').innerText = '$' + exp;
-            document.getElementById('stat-balance').innerText = '$' + (inc - exp);
+            # Destroy prior Chart.js instance before re-rendering
+            if my_chart is not None:
+                my_chart.destroy()
 
-            if (myChart) myChart.destroy();
-            myChart = new Chart(document.getElementById('chart'), {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(catTotals),
-                    datasets: [{
-                        data: Object.values(catTotals),
-                        backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+            labels = list(cat_totals.keys())
+            values = list(cat_totals.values())
 
-        updateDashboard();
+            # Configure Chart.js options using Pyodide JS objects
+            chart_config = window.Object.new()
+            chart_config.type = 'pie'
+            
+            data_obj = window.Object.new()
+            data_obj.labels = labels
+
+            dataset = window.Object.new()
+            dataset.data = values
+            dataset.backgroundColor = ['#3498db', '#e74c3c', '#27ae60', '#f1c40f']
+
+            data_obj.datasets = [dataset]
+            chart_config.data = data_obj
+
+            options = window.Object.new()
+            options.responsive = True
+            options.maintainAspectRatio = False
+            chart_config.options = options
+
+            # Render Chart.js
+            ctx = document.getElementById('chart')
+            my_chart = window.Chart.new(ctx, chart_config)
+
+        def add_transaction(event):
+            type_val = document.getElementById('type').value
+            desc_val = document.getElementById('desc').value.strip()
+            amt_raw = document.getElementById('amt').value
+            cat_val = document.getElementById('cat').value
+
+            if desc_val and amt_raw != '':
+                try:
+                    amt_val = float(amt_raw)
+                    data.append({
+                        'type': type_val,
+                        'desc': desc_val,
+                        'amt': amt_val,
+                        'cat': cat_val
+                    })
+                    update_dashboard()
+                    document.getElementById('desc').value = ''
+                    document.getElementById('amt').value = ''
+                except ValueError:
+                    pass
+
+        def reset_data(event):
+            global data
+            if window.confirm('Are you sure you want to delete all transactions?'):
+                data = []
+                update_dashboard()
+
+        # Bind Python button click handlers safely
+        document.getElementById('btn-add').addEventListener('click', create_proxy(add_transaction))
+        document.getElementById('btn-reset').addEventListener('click', create_proxy(reset_data))
+
+        # Initial render on launch
+        update_dashboard()
     </script>
 </body>
 </html>
-"""
